@@ -1,0 +1,12 @@
+{
+  "leftPier": {
+    "settlementMm": 12.5,
+    "direction": "down",
+    "lastUpdated": "2026-06-01"
+  },
+  "rightPier": {
+    "settlementMm": 8.3,
+    "direction": "down",
+    "lastUpdated": "2026-06-01"
+  }
+}
