@@ -1,14 +1,14 @@
 import { create } from 'zustand';
 import { LoadCaseType, BridgeState, OVER_LIMIT_THRESHOLD } from '../types';
 import settlementData from '../data/settlementData.json';
-import { recalculateStressRatios, getMaxStressRatioAtPosition } from '../core/loadCases';
+import { recalculateStressRatios, getSectionMaxStressRatio } from '../core/loadCases';
 
 export const useBridgeStore = create<BridgeState>((set, get) => ({
   cutPosition: 50,
   currentLoadCase: 'daily',
   stressRatios: recalculateStressRatios('daily'),
-  maxStressRatio: getMaxStressRatioAtPosition(50, 'daily'),
-  isOverLimit: getMaxStressRatioAtPosition(50, 'daily') > OVER_LIMIT_THRESHOLD,
+  maxStressRatio: getSectionMaxStressRatio(50, 'daily'),
+  isOverLimit: getSectionMaxStressRatio(50, 'daily') > OVER_LIMIT_THRESHOLD,
   selectedPier: null,
   settlementValues: {
     left: settlementData.leftPier.settlementMm,
@@ -20,7 +20,7 @@ export const useBridgeStore = create<BridgeState>((set, get) => ({
   setCutPosition: (pos: number) => {
     const clampedPos = Math.max(0, Math.min(100, pos));
     const { currentLoadCase } = get();
-    const maxStress = getMaxStressRatioAtPosition(clampedPos, currentLoadCase);
+    const maxStress = getSectionMaxStressRatio(clampedPos, currentLoadCase);
     
     set({
       cutPosition: clampedPos,
@@ -32,7 +32,7 @@ export const useBridgeStore = create<BridgeState>((set, get) => ({
   setLoadCase: (caseType: LoadCaseType) => {
     const { cutPosition } = get();
     const stressRatios = recalculateStressRatios(caseType);
-    const maxStress = getMaxStressRatioAtPosition(cutPosition, caseType);
+    const maxStress = getSectionMaxStressRatio(cutPosition, caseType);
     
     set({
       currentLoadCase: caseType,
@@ -45,14 +45,13 @@ export const useBridgeStore = create<BridgeState>((set, get) => ({
   selectPier: (pier: 'left' | 'right' | null) => {
     set({ 
       selectedPier: pier,
-      showSettlementArrows: pier !== null,
     });
   },
 
   recalculateStress: () => {
     const { currentLoadCase, cutPosition } = get();
     const stressRatios = recalculateStressRatios(currentLoadCase);
-    const maxStress = getMaxStressRatioAtPosition(cutPosition, currentLoadCase);
+    const maxStress = getSectionMaxStressRatio(cutPosition, currentLoadCase);
     
     set({
       stressRatios,

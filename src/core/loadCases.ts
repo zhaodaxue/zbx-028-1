@@ -54,6 +54,30 @@ export function getMaxStressRatioAtPosition(
   return Math.min(1, baseRatio * multiplier);
 }
 
+export function getSectionMaxStressRatio(
+  positionPercent: number,
+  caseType: LoadCaseType,
+  xSegments: number = 50
+): number {
+  const data = getLoadCaseData(caseType);
+  const multiplier = LOAD_CASE_MULTIPLIERS[caseType];
+  const baseRatio = getStressRatioAtPosition(
+    positionPercent,
+    data.stressRatios,
+    data.positions
+  );
+  
+  let maxRatio = 0;
+  for (let i = 0; i <= xSegments; i++) {
+    const xPercent = (i / xSegments) * 100;
+    const archFactor = 0.8 + 0.4 * Math.sin((xPercent / 100) * Math.PI);
+    const stressRatio = baseRatio * archFactor * multiplier;
+    maxRatio = Math.max(maxRatio, stressRatio);
+  }
+  
+  return Math.min(1, maxRatio);
+}
+
 export function getStressRatioForSection(
   positionPercent: number,
   xPercent: number,

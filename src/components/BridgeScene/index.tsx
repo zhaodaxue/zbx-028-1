@@ -10,7 +10,8 @@ import { calculateArchY } from '../../utils/geometryUtils';
 import { mapStressToColor } from '../../utils/colorMapping';
 
 interface BridgeSceneProps {
-  onPierClick: (side: 'left' | 'right', screenPos: { x: number; y: number }) => void;
+  onPierClick?: (side: 'left' | 'right', screenPos: { x: number; y: number }) => void;
+  onPierScreenUpdate?: (side: 'left' | 'right', screenPos: { x: number; y: number }) => void;
 }
 
 const DeckMaterial: React.FC = () => (
@@ -36,9 +37,9 @@ const Arch: React.FC = () => {
       const zPos = (z / radialSegments) * archThickness - archThickness / 2;
       
       for (let i = 0; i <= segments; i++) {
-        const x = (i / segments) * span;
-        const yOuter = calculateArchY(x, span, archRadius);
-        const yInner = calculateArchY(x, span, archRadius - archThickness);
+        const x = (i / segments) * span - span / 2;
+        const yOuter = calculateArchY(x, archRadius);
+        const yInner = calculateArchY(x, archRadius - archThickness);
         
         vertices.push(x, yOuter, zPos - archWidth / 2);
         vertices.push(x, yInner, zPos - archWidth / 2);
@@ -196,11 +197,11 @@ const CutSection: React.FC = () => {
     const outlineVertices: number[] = [];
 
     for (let i = 0; i <= segments; i++) {
-      const x = (i / segments) * BRIDGE_DIMENSIONS.span;
-      const xPercent = (x / BRIDGE_DIMENSIONS.span) * 100;
+      const x = (i / segments) * BRIDGE_DIMENSIONS.span - BRIDGE_DIMENSIONS.span / 2;
+      const xPercent = ((x + BRIDGE_DIMENSIONS.span / 2) / BRIDGE_DIMENSIONS.span) * 100;
       
-      const yOuter = calculateArchY(x, BRIDGE_DIMENSIONS.span, BRIDGE_DIMENSIONS.archRadius) + BRIDGE_DIMENSIONS.pierHeight;
-      const yInner = calculateArchY(x, BRIDGE_DIMENSIONS.span, BRIDGE_DIMENSIONS.archRadius - BRIDGE_DIMENSIONS.archThickness) + BRIDGE_DIMENSIONS.pierHeight;
+      const yOuter = calculateArchY(x, BRIDGE_DIMENSIONS.archRadius) + BRIDGE_DIMENSIONS.pierHeight;
+      const yInner = calculateArchY(x, BRIDGE_DIMENSIONS.archRadius - BRIDGE_DIMENSIONS.archThickness) + BRIDGE_DIMENSIONS.pierHeight;
       
       const stressRatio = getStressRatioForSection(cutPosition, xPercent, currentLoadCase);
       const color = mapStressToColor(stressRatio);
@@ -306,16 +307,34 @@ const Ground: React.FC = () => {
   );
 };
 
-const SceneContent: React.FC<{ onPierClick: (side: 'left' | 'right', screenPos: { x: number; y: number }) => void }> = ({ onPierClick }) => {
-  const { camera } = useThree();
+const SceneContent: React.FC<{
+  onPierClick: (side: 'left' | 'right', screenPos: { x: number; y: number }) => void;
+  onPierScreenUpdate?: (side: 'left' | 'right', screenPos: { x: number; y: number }) => void;
+}> = ({ onPierClick, onPierScreenUpdate }) => {
+  const { camera, gl } = useThree();
+  const { selectedPier } = useBridgeStore();
 
-  const handlePierClick = useCallback((side: 'left' | 'right') => {
+  const computeScreenPos = useCallback((side: 'left' | 'right'): { x: number; y: number } => {
     const pierTop = getPierTopPosition(side);
     const vector = pierTop.clone().project(camera);
-    const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-    onPierClick(side, { x, y });
-  }, [camera, onPierClick]);
+    const canvas = gl.domElement;
+    const rect = canvas.getBoundingClientRect();
+    const x = rect.left + (vector.x * 0.5 + 0.5) * rect.width;
+    const y = rect.top + (-vector.y * 0.5 + 0.5) * rect.height;
+    return { x, y };
+  }, [camera, gl]);
+
+  const handlePierClick = useCallback((side: 'left' | 'right') => {
+    const pos = computeScreenPos(side);
+    onPierClick(side, pos);
+  }, [computeScreenPos, onPierClick]);
+
+  useFrame(() => {
+    if (selectedPier && onPierScreenUpdate) {
+      const pos = computeScreenPos(selectedPier);
+      onPierScreenUpdate(selectedPier, pos);
+    }
+  });
 
   return (
     <>
@@ -375,7 +394,7 @@ const SceneContent: React.FC<{ onPierClick: (side: 'left' | 'right', screenPos: 
   );
 };
 
-export const BridgeScene: React.FC<BridgeSceneProps> = ({ onPierClick }) => {
+export const BridgeScene: React.FC<BridgeSceneProps> = ({ onPierClick, onPierScreenUpdate }) => {
   return (
     <div id="scene-container" className="w-full h-full">
       <Canvas
@@ -383,7 +402,8 @@ export const BridgeScene: React.FC<BridgeSceneProps> = ({ onPierClick }) => {
         gl={{ 
           antialias: true,
           alpha: false,
-          powerPreference: 'high-performance'
+          powerPreference: 'high-performance',
+          preserveDrawingBuffer: true,
         }}
         camera={{ position: [30, 20, 25], fov: 50 }}
         onCreated={({ gl, scene }) => {
@@ -391,7 +411,10 @@ export const BridgeScene: React.FC<BridgeSceneProps> = ({ onPierClick }) => {
           scene.background = new THREE.Color(0x1a1a2e);
         }}
       >
-        <SceneContent onPierClick={onPierClick} />
+        <SceneContent 
+          onPierClick={onPierClick || (() => {})} 
+          onPierScreenUpdate={onPierScreenUpdate}
+        />
       </Canvas>
     </div>
   );

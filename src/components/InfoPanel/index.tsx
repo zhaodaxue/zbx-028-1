@@ -53,19 +53,18 @@ export const InfoPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-full h-3 bg-slate-700/50 rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-slate-700/50 rounded-full overflow-hidden relative">
             <div 
-              className="h-full rounded-full transition-all duration-700 relative"
+              className="h-full rounded-full transition-all duration-700"
               style={{ 
                 width: `${Math.min(100, maxStressRatio * 100)}%`,
                 backgroundColor: mapStressToColorHex(maxStressRatio),
               }}
-            >
-              <div 
-                className="absolute right-0 top-0 h-full w-0.5 bg-white/50"
-                style={{ left: `${OVER_LIMIT_THRESHOLD * 100}%` }}
-              />
-            </div>
+            />
+            <div 
+              className="absolute top-0 h-full w-0.5 bg-white/70 z-10"
+              style={{ left: `${OVER_LIMIT_THRESHOLD * 100}%` }}
+            />
           </div>
         </div>
 

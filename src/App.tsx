@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ControlPanel } from './components/ControlPanel';
 import { InfoPanel } from './components/InfoPanel';
@@ -15,20 +15,16 @@ const App: React.FC = () => {
     setPierScreenPos(screenPos);
   }, [selectPier]);
 
+  const handlePierScreenUpdate = useCallback((side: 'left' | 'right', screenPos: { x: number; y: number }) => {
+    if (selectedPier === side) {
+      setPierScreenPos(screenPos);
+    }
+  }, [selectedPier]);
+
   const handleBackgroundClick = useCallback(() => {
     selectPier(null);
     setPierScreenPos(null);
   }, [selectPier]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (selectedPier && pierScreenPos) {
-        setPierScreenPos(null);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [selectedPier, pierScreenPos, selectPier]);
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-slate-950 relative" onClick={handleBackgroundClick}>
@@ -41,7 +37,7 @@ const App: React.FC = () => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full h-full relative">
-          <BridgeScene onPierClick={handlePierClick} />
+          <BridgeScene onPierClick={handlePierClick} onPierScreenUpdate={handlePierScreenUpdate} />
           
           {selectedPier && pierScreenPos && (
             <SettlementLabel 

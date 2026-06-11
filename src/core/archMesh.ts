@@ -19,9 +19,9 @@ export function createArchGeometry(
     const zPos = (z / radialSegments) * thickness - thickness / 2;
     
     for (let i = 0; i <= segments; i++) {
-      const x = (i / segments) * span;
-      const yOuter = calculateArchY(x, span, radius);
-      const yInner = calculateArchY(x, span, radius - thickness);
+      const x = (i / segments) * span - span / 2;
+      const yOuter = calculateArchY(x, radius);
+      const yInner = calculateArchY(x, radius - thickness);
       
       vertices.push(x, yOuter, zPos - width / 2);
       vertices.push(x, yInner, zPos - width / 2);
@@ -88,8 +88,8 @@ export function generateArchVertices(
 ): THREE.Vector3[] {
   const vertices: THREE.Vector3[] = [];
   for (let i = 0; i <= segments; i++) {
-    const x = (i / segments) * span;
-    const y = calculateArchY(x, span, radius);
+    const x = (i / segments) * span - span / 2;
+    const y = calculateArchY(x, radius);
     vertices.push(new THREE.Vector3(x, y, 0));
   }
   return vertices;

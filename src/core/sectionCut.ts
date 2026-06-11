@@ -50,7 +50,7 @@ export function intersectArchWithPlane(
   const positionPercent = ((zPos + BRIDGE_DIMENSIONS.archWidth / 2) / BRIDGE_DIMENSIONS.archWidth) * 100;
   
   const stressRatios = sortedPoints.map(point => {
-    const xPercent = (point.x / BRIDGE_DIMENSIONS.span) * 100;
+    const xPercent = ((point.x + BRIDGE_DIMENSIONS.span / 2) / BRIDGE_DIMENSIONS.span) * 100;
     return calculateStressRatioAtX(xPercent, positionPercent);
   });
 
@@ -108,7 +108,7 @@ export function createSectionGeometry(
     const stressRatio = stressRatios[i];
     const color = mapStressToColor(stressRatio);
     
-    const innerY = calculateArchY(point.x, BRIDGE_DIMENSIONS.span, BRIDGE_DIMENSIONS.archRadius - thickness);
+    const innerY = calculateArchY(point.x, BRIDGE_DIMENSIONS.archRadius - thickness);
     
     vertices.push(point.x, point.y, zOffset - 0.01);
     vertices.push(point.x, innerY + BRIDGE_DIMENSIONS.pierHeight, zOffset - 0.01);
@@ -146,7 +146,7 @@ export function createSectionOutline(
 
   for (let i = 0; i < points.length; i++) {
     const point = points[i];
-    const innerY = calculateArchY(point.x, BRIDGE_DIMENSIONS.span, BRIDGE_DIMENSIONS.archRadius - thickness);
+    const innerY = calculateArchY(point.x, BRIDGE_DIMENSIONS.archRadius - thickness);
     
     vertices.push(point.x, point.y, zOffset);
     vertices.push(point.x, innerY + BRIDGE_DIMENSIONS.pierHeight, zOffset);

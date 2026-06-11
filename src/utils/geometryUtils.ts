@@ -44,10 +44,8 @@ export function getStressRatioAtPosition(
   return stressRatios[0];
 }
 
-export function calculateArchY(x: number, span: number, radius: number): number {
-  const centerX = span / 2;
-  const dx = x - centerX;
-  const dy = Math.sqrt(Math.max(0, radius * radius - dx * dx));
+export function calculateArchY(centeredX: number, radius: number): number {
+  const dy = Math.sqrt(Math.max(0, radius * radius - centeredX * centeredX));
   return radius - dy;
 }
 
@@ -59,8 +57,8 @@ export function createArchPath(
 ): THREE.Vector3[] {
   const points: THREE.Vector3[] = [];
   for (let i = 0; i <= segments; i++) {
-    const x = (i / segments) * span;
-    const y = calculateArchY(x, span, radius);
+    const x = (i / segments) * span - span / 2;
+    const y = calculateArchY(x, radius);
     points.push(new THREE.Vector3(x, y, 0));
   }
   return points;
